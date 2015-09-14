@@ -8,11 +8,21 @@ This project automates the detection of search engine ajax crawling requests, an
  * Add this project as a dependency of your project.
    * Via maven, that would look like:
 	```
-	<dependency>
-		<groupId>gov.usgs.cida.ajax_search_crawler_tools</groupId>
-		<artifactId>ajax_search_crawler_tools</artifactId>
-		<version>0.1.0-SNAPSHOT</version>
-	</dependency>
+    <repositories>
+        <repository>
+            <id>nexus</id>
+            <name>CIDA Nexus</name>
+            <url>http://cida.usgs.gov/maven/cida-public/</url>
+        </repository>
+    </repositories>
+
+	<dependencies>
+	    	<dependency>
+	    		<groupId>gov.usgs.cida.ajax_search_crawler_tools</groupId>
+	    		<artifactId>ajax_search_crawler_tools</artifactId>
+	    		<version>0.1.0-SNAPSHOT</version>
+	    	</dependency>
+	</dependencies>
 	```
  * Create a class to respond to the search engine crawler.
 	```
@@ -29,8 +39,10 @@ This project automates the detection of search engine ajax crawling requests, an
 	public void service(SearchCrawlerRequest request, HttpServletResponse response) {
 		//your response logic here
 	}
+	}
 	```
- * Edit your project's web.xml. Add the ugly url filter and a reference to your recently-created class
+ * Edit your project's web.xml. Add the ugly url filter and a reference to your recently-created class.
+
 	```
     <filter>
         <filter-name>SearchBotUglyUrlFilter</filter-name>
