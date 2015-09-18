@@ -1,4 +1,4 @@
-package gov.usgs.cida.ajax_search_crawler_tools.mapper;
+package gov.usgs.cida.ajax_search_crawler_tools;
 
 
 public class PrettyUglyPair {

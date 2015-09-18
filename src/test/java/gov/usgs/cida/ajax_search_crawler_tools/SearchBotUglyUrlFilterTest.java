@@ -1,4 +1,4 @@
-package gov.usgs.cida.ajax_search_crawler_tools.filter;
+package gov.usgs.cida.ajax_search_crawler_tools;
 
 import static org.mockito.Mockito.*;
 
@@ -11,17 +11,15 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class SearchBotUglyUrlFilterTest {
 	SearchCrawlerUglyUrlFilter filter;
-	MockHttpServlet mockServlet;
+	MockSearchCrawlerServicer mockServlet;
 	MockFilterChain filterChain;
 	HttpServletRequest req;
 	HttpServletResponse res;
@@ -34,12 +32,14 @@ public class SearchBotUglyUrlFilterTest {
 		}
 	}
 	
-	class MockHttpServlet extends HttpServlet{
+	class MockSearchCrawlerServicer implements ISearchCrawlerServicer{
 		public boolean wasCalled = false;
 		@Override
-		protected void service(HttpServletRequest request, HttpServletResponse response){
+		public void service(SearchCrawlerRequest request, HttpServletResponse response) {
 			wasCalled = true;
 		}
+
+
 	}
 
 	public void assertDelegateServletWasCalled(){
@@ -55,8 +55,8 @@ public class SearchBotUglyUrlFilterTest {
 	@Before
 	public void setUp() {
 		filter = new SearchCrawlerUglyUrlFilter();
-		mockServlet = new MockHttpServlet();
-		filter.setDelegateServlet(mockServlet);
+		mockServlet = new MockSearchCrawlerServicer();
+		filter.setSearchCrawlerServicer(mockServlet);
 		filterChain = new MockFilterChain();
 		req = mock(HttpServletRequest.class);
 		res = mock(HttpServletResponse.class);

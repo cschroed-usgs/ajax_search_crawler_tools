@@ -1,8 +1,5 @@
-package gov.usgs.cida.ajax_search_crawler_tools.filter;
+package gov.usgs.cida.ajax_search_crawler_tools;
 
-import gov.usgs.cida.ajax_search_crawler_tools.mapper.IPrettyUrlToResourceMapper;
-import gov.usgs.cida.ajax_search_crawler_tools.servlet.SearchCrawlerServlet;
-import gov.usgs.cida.ajax_search_crawler_tools.mapper.PrettyUglyUrlMapper;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -14,41 +11,41 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 
 public class SearchCrawlerUglyUrlFilter implements Filter{
-	private HttpServlet delegateServlet;
+	private ISearchCrawlerServicer searchCrawlerServicer;
 	
 	//http GET parameter
 	public static final String SEARCHBOT_ESCAPED_FRAGMENT_PARAM_NAME = PrettyUglyUrlMapper.SEARCHBOT_ESCAPED_FRAGMENT_PARAM_NAME;
 	
 	//filter config parameter definied in web.xml
-	public static final String PRETTY_URL_TO_RESOURCE_MAPPER_PARAM_NAME = "pretty-url-to-resource-mapper";
+	public static final String SEARCH_CRAWLER_SERVICER = "search-crawler-servicer";
 	
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
-		String prettyUrlToResourceMapper = filterConfig.getInitParameter(PRETTY_URL_TO_RESOURCE_MAPPER_PARAM_NAME);
-		if(null == prettyUrlToResourceMapper || prettyUrlToResourceMapper.isEmpty()){
+		String searchCrawlerServletName = filterConfig.getInitParameter(SEARCH_CRAWLER_SERVICER);
+		if(null == searchCrawlerServletName || searchCrawlerServletName.isEmpty()){
 			throw new IllegalArgumentException(
 				"an init config value must be specified for the '" +
-				PRETTY_URL_TO_RESOURCE_MAPPER_PARAM_NAME +"' " +
+				SEARCH_CRAWLER_SERVICER +"' " +
 				"parameter of the '" + this.getClass().getSimpleName() +
 				"' filter."
 			);
 		} else{
-			prettyUrlToResourceMapper = prettyUrlToResourceMapper.trim();
+			searchCrawlerServletName = searchCrawlerServletName.trim();
 			try {
-				Class<?> clazz = Class.forName(prettyUrlToResourceMapper);
-				IPrettyUrlToResourceMapper instance = (IPrettyUrlToResourceMapper) clazz.newInstance();
-				SearchCrawlerServlet searchCrawlerServlet = new SearchCrawlerServlet(instance);
-				setDelegateServlet(searchCrawlerServlet);
+				Class<?> clazz = Class.forName(searchCrawlerServletName);
+				ISearchCrawlerServicer instance = (ISearchCrawlerServicer) clazz.newInstance();
+				this.setSearchCrawlerServicer(instance);
 			} catch (ClassNotFoundException ex){
 				throw new IllegalArgumentException(
 					"Could not find class '" + 
-					prettyUrlToResourceMapper + "' "+
+					searchCrawlerServletName + "' "+
 					", the init config value specified for the '" +
-					PRETTY_URL_TO_RESOURCE_MAPPER_PARAM_NAME +"' " +
+					SEARCH_CRAWLER_SERVICER +"' " +
 					"parameter of the '" + this.getClass().getSimpleName() +
 					"' filter."
 				);
@@ -77,7 +74,7 @@ public class SearchCrawlerUglyUrlFilter implements Filter{
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 		Enumeration<String> paramNames = request.getParameterNames();
 		Set<String> lowerCaseParamNames = new HashSet<>();
-
+		HttpServletResponse httpServletResponse = (HttpServletResponse) response;
 		if(null != paramNames){
 			while(paramNames.hasMoreElements()){
 				lowerCaseParamNames.add(paramNames.nextElement().toLowerCase(Locale.ENGLISH));
@@ -86,7 +83,8 @@ public class SearchCrawlerUglyUrlFilter implements Filter{
 		
 		if(lowerCaseParamNames.contains(SEARCHBOT_ESCAPED_FRAGMENT_PARAM_NAME)){
 			//bypass any other defined filters, delegate to the servlet
-			getDelegateServlet().service(request, response);
+			SearchCrawlerRequest crawlerRequest = new SearchCrawlerRequest((HttpServletRequest) request);
+			this.getSearchCrawlerServicer().service(crawlerRequest, httpServletResponse);
 		} else {
 			chain.doFilter(request, response);
 		}
@@ -98,17 +96,17 @@ public class SearchCrawlerUglyUrlFilter implements Filter{
 	}
 
 	/**
-	 * @return the delegateServlet
+	 * @return the searchCrawlerServicer
 	 */
-	public HttpServlet getDelegateServlet() {
-		return delegateServlet;
+	public ISearchCrawlerServicer getSearchCrawlerServicer() {
+		return searchCrawlerServicer;
 	}
 
 	/**
-	 * @param delegateServlet the delegateServlet to set
+	 * @param searchCrawlerServicer the searchCrawlerServicer to set
 	 */
-	public void setDelegateServlet(HttpServlet delegateServlet) {
-		this.delegateServlet = delegateServlet;
+	public void setSearchCrawlerServicer(ISearchCrawlerServicer searchCrawlerServicer) {
+		this.searchCrawlerServicer = searchCrawlerServicer;
 	}
 
 }
