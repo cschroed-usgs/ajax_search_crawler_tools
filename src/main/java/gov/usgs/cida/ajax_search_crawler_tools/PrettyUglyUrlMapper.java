@@ -45,7 +45,7 @@ public class PrettyUglyUrlMapper {
 	 */
 	public static URI uglyToPretty(URI ugly){
 		String uglyQuery = ugly.getRawQuery();
-		List<NameValuePair> uglyParams = URLEncodedUtils.parse(uglyQuery, Charset.forName("utf-8"), '&');
+		List<NameValuePair> uglyParams = URLEncodedUtils.parse(uglyQuery, Charset.forName("utf-8"));
 		URIBuilder uriBuilder = new URIBuilder(ugly);
 		
 		//rebuild the query using the rules from Google's Spec.
