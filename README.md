@@ -20,7 +20,7 @@ This project automates the detection of search engine ajax crawling requests, an
 	    	<dependency>
 	    		<groupId>gov.usgs.cida.ajax_search_crawler_tools</groupId>
 	    		<artifactId>ajax_search_crawler_tools</artifactId>
-	    		<version>0.1.0-SNAPSHOT</version>
+	    		<version>0.1.1</version>
 	    	</dependency>
 	</dependencies>
 	```
