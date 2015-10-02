@@ -64,14 +64,14 @@ public class SearchCrawlerUglyUrlFilter implements Filter{
 	 * searchbot parameter, then continue through the filter chain.
 	 * The detection of the searchbot escaped fragment parameter is
 	 * case-insensitive
-	 * @param request
-	 * @param response
-	 * @param chain
-	 * @throws IOException
-	 * @throws ServletException 
+	 * @param request the request being made by the client
+	 * @param response the response to the client's request
+	 * @param chain the chain of all filters
+	 * @throws IOException when FilterChain#doFilter throws one
+	 * @throws ServletException when FilterChain#doFilter throws one
 	 */
 	@Override
-	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException{
 		Enumeration<String> paramNames = request.getParameterNames();
 		Set<String> lowerCaseParamNames = new HashSet<>();
 		HttpServletResponse httpServletResponse = (HttpServletResponse) response;

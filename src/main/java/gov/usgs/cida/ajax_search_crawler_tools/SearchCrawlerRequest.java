@@ -49,8 +49,7 @@ public class SearchCrawlerRequest extends HttpServletRequestWrapper{
 	 *	* non-context path 
 	 *	* the query string
 	 *	* fragment
-	 * @param request
-	 * @return 
+	 * @return the pretty url
 	 */
 	public String getPrettyUrlWithoutContextPath(){
 		return getUrlWithoutContextPath(this.getPrettyUrl(), this.getContextPath());

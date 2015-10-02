@@ -21,8 +21,8 @@ public class PrettyUglyUrlMapper {
 	
 	/**
 	 * Convenience wrapper for converting string urls
-	 * @param ugly
-	 * @return pretty url
+	 * @param ugly the ugly url that the search engine crawler is requesting
+	 * @return the pretty url
 	 */
 	public static String uglyToPretty(String ugly){
 		try {
@@ -40,7 +40,7 @@ public class PrettyUglyUrlMapper {
 	 * Maps ugly urls to pretty urls as specified in the Google 
 	 * specification for Making AJAX Applications Crawlable:
 	 * https://developers.google.com/webmasters/ajax-crawling/docs/specification?hl=en
-	 * @param ugly
+	 * @param ugly the ugly url that the search engine crawler is requesting
 	 * @return pretty url
 	 */
 	public static URI uglyToPretty(URI ugly){
@@ -73,7 +73,7 @@ public class PrettyUglyUrlMapper {
 	}
 	/**
 	 * Convenience wrapper for converting string urls
-	 * @param pretty
+	 * @param pretty the pretty url
 	 * @return ugly url
 	 */
 	public static String prettyToUgly(String pretty){
@@ -94,7 +94,7 @@ public class PrettyUglyUrlMapper {
 	 * specification for Making AJAX Applications Crawlable:
 	 * https://developers.google.com/webmasters/ajax-crawling/docs/specification?hl=en
 	 * 
-	 * @param pretty
+	 * @param pretty the pretty url
 	 * @return ugly url. If the pretty url does not contain a hashbang (#!),
 	 * then the pretty url is returned as is. In that case pretty.equals(ugly).
 	 */
