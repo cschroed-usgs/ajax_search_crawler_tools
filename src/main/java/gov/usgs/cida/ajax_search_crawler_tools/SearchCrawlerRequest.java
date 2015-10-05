@@ -68,9 +68,9 @@ public class SearchCrawlerRequest extends HttpServletRequestWrapper{
 	static String getUrlWithoutContextPath(String fullUrl, String contextPath){
 		String urlWithoutContextPath = fullUrl;
 		String urlWithoutProtocol = fullUrl.replaceFirst("^.*://", "");
-		String urlWithoutProtocolPortOrHost = urlWithoutProtocol.replaceFirst(".*/", "/");
+		String urlWithoutProtocolPortOrHost = urlWithoutProtocol.replaceFirst(".*?/", "/");
 		if(null != contextPath && !contextPath.isEmpty()){
-			urlWithoutContextPath = urlWithoutProtocolPortOrHost.replaceFirst("^/" + contextPath, "/");
+			urlWithoutContextPath = urlWithoutProtocolPortOrHost.replaceFirst("^" + contextPath, "");
 		} else {
 			urlWithoutContextPath = urlWithoutProtocolPortOrHost;
 		}
