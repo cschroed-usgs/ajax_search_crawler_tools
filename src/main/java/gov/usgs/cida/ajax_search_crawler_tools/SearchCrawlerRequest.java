@@ -4,7 +4,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
-import org.apache.http.client.utils.URIBuilder;
 
 
 public class SearchCrawlerRequest extends HttpServletRequestWrapper{

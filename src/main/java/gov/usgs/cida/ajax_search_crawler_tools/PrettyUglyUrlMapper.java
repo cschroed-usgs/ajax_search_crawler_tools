@@ -1,13 +1,17 @@
 package gov.usgs.cida.ajax_search_crawler_tools;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.nio.charset.Charset;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.client.utils.URLEncodedUtils;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This class performs bidirectional mapping between ugly and pretty urls as
@@ -36,6 +40,34 @@ public class PrettyUglyUrlMapper {
 			throw new IllegalArgumentException(ex);
 		}
 	}
+	
+	/**
+	 * Get Key-Value Pairs from a url's query string
+	 * http://stackoverflow.com/questions/13592236/parse-the-uri-string-into-name-value-collection-in-java
+	 * Small modification - the keys are all automatically lower-cased according to the English Locale
+	 * 
+	 * We're using this instead of the apache http client to avoid transitive dependency version conflicts
+	 */
+	static Map<String, List<String>> splitQuery(URI uri) {
+		final Map<String, List<String>> query_pairs = new LinkedHashMap<String, List<String>>();
+		final String[] pairs = uri.getQuery().split("&");
+		for (String pair : pairs) {
+			try {
+				final int idx = pair.indexOf("=");
+				String key = idx > 0 ? URLDecoder.decode(pair.substring(0, idx), "UTF-8") : pair;
+				key = key.toLowerCase(Locale.ENGLISH);
+				if (!query_pairs.containsKey(key)) {
+					query_pairs.put(key, new LinkedList<String>());
+				}
+				final String value = idx > 0 && pair.length() > idx + 1 ? URLDecoder.decode(pair.substring(idx + 1), "UTF-8") : null;
+				query_pairs.get(key).add(value);
+			} catch (UnsupportedEncodingException ex) {
+				throw new IllegalArgumentException(ex);
+			}
+		}
+		return query_pairs;
+	}
+	
 	/**
 	 * Maps ugly urls to pretty urls as specified in the Google 
 	 * specification for Making AJAX Applications Crawlable:
@@ -44,78 +76,97 @@ public class PrettyUglyUrlMapper {
 	 * @return pretty url
 	 */
 	public static URI uglyToPretty(URI ugly){
-		String uglyQuery = ugly.getRawQuery();
-		List<NameValuePair> uglyParams = URLEncodedUtils.parse(uglyQuery, Charset.forName("utf-8"));
-		URIBuilder uriBuilder = new URIBuilder(ugly);
+		Map<String, List<String>> kvps = splitQuery(ugly);
 		
-		//rebuild the query using the rules from Google's Spec.
-		uriBuilder.removeQuery();
-		for(NameValuePair uglyParamPair : uglyParams){
-			String lowerCaseParamName = uglyParamPair.getName().toLowerCase(Locale.ENGLISH);
-			if(SEARCHBOT_ESCAPED_FRAGMENT_PARAM_NAME.equals(lowerCaseParamName)){
-				String fragmentValue = uglyParamPair.getValue();
-				if(!fragmentValue.isEmpty()){
-					uriBuilder.setFragment(BANG + uglyParamPair.getValue());
+		//building new query string that excludes the _escaped_fragment_ key and values
+		//doing this instead of apache http client url builder to avoid transitive dependency conflicts
+		
+		String fragment = "";
+		URI pretty = null;
+		StringBuilder sb = new StringBuilder("?");
+		for (String key : kvps.keySet()) {
+			List<String> values = kvps.get(key);
+			//presumes that all keys are already lower-case
+			if (SEARCHBOT_ESCAPED_FRAGMENT_PARAM_NAME.equals(key)) {
+				String fragmentValue = values.get(0);
+				if (!fragmentValue.isEmpty()) {
+					fragment = BANG + fragmentValue;
 				}
 			} else {
-				uriBuilder.addParameter(uglyParamPair.getName(), uglyParamPair.getValue());
+				for (String value : values) {
+					sb.append(key)
+						.append("=")
+						.append(value)
+						.append("&");
+				}
 			}
 		}
 		
-		URI builtUri;
+		String queryWithoutEscapedFragment = sb.toString();
+		//remove the trailing ampersand, if any
+		if("&".equals(queryWithoutEscapedFragment.charAt(queryWithoutEscapedFragment.length()))){
+			queryWithoutEscapedFragment=queryWithoutEscapedFragment.substring(0, queryWithoutEscapedFragment.length());
+		}
 		try {
-			builtUri = uriBuilder.build();
+			pretty = new URI(
+				ugly.getScheme(),
+				ugly.getUserInfo(),
+				ugly.getHost(),
+				ugly.getPort(),
+				ugly.getPath(),
+				queryWithoutEscapedFragment,
+				fragment
+			);
 		} catch (URISyntaxException ex) {
 			throw new IllegalArgumentException(ex);
 		}
-		
-		return builtUri;
+		return pretty;
 	}
-	/**
-	 * Convenience wrapper for converting string urls
-	 * @param pretty the pretty url
-	 * @return ugly url
-	 */
-	public static String prettyToUgly(String pretty){
-		try {
-			String result = null;
-			URI uri = prettyToUgly(new URI(pretty));
-			if(null != uri){
-				result = uri.toString();
-			}
-			return result;
-		} catch (URISyntaxException ex) {
-			throw new IllegalArgumentException(ex);
-		}
-	}
-	
-	/**
-	 * Maps pretty urls to ugly urls as specified in the Google 
-	 * specification for Making AJAX Applications Crawlable:
-	 * https://developers.google.com/webmasters/ajax-crawling/docs/specification?hl=en
-	 * 
-	 * @param pretty the pretty url
-	 * @return ugly url. If the pretty url does not contain a hashbang (#!),
-	 * then the pretty url is returned as is. In that case pretty.equals(ugly).
-	 */
-	public static URI prettyToUgly(URI pretty) {
-		URI ugly = null;
-		URIBuilder uriBuilder = new URIBuilder(pretty);
-		String fragment = pretty.getFragment();
-		if (null != fragment && !fragment.isEmpty()) {
-			if (fragment.startsWith(BANG)) {
-				//move the content of the escaped fragment param
-				//to the fragment. Exclude the initial "!"
-				uriBuilder.addParameter(SEARCHBOT_ESCAPED_FRAGMENT_PARAM_NAME, fragment.substring(1));
-				uriBuilder.setFragment(null);
-			}
-		}
-		try {
-			ugly = uriBuilder.build();
-
-		} catch (URISyntaxException ex) {
-			throw new IllegalArgumentException(ex);
-		}
-		return ugly;
-	}
+//	/**
+//	 * Convenience wrapper for converting string urls
+//	 * @param pretty the pretty url
+//	 * @return ugly url
+//	 */
+//	public static String prettyToUgly(String pretty){
+//		try {
+//			String result = null;
+//			URI uri = prettyToUgly(new URI(pretty));
+//			if(null != uri){
+//				result = uri.toString();
+//			}
+//			return result;
+//		} catch (URISyntaxException ex) {
+//			throw new IllegalArgumentException(ex);
+//		}
+//	}
+//	
+//	/**
+//	 * Maps pretty urls to ugly urls as specified in the Google 
+//	 * specification for Making AJAX Applications Crawlable:
+//	 * https://developers.google.com/webmasters/ajax-crawling/docs/specification?hl=en
+//	 * 
+//	 * @param pretty the pretty url
+//	 * @return ugly url. If the pretty url does not contain a hashbang (#!),
+//	 * then the pretty url is returned as is. In that case pretty.equals(ugly).
+//	 */
+//	public static URI prettyToUgly(URI pretty) {
+//		URI ugly = null;
+//		URIBuilder uriBuilder = new URIBuilder(pretty);
+//		String fragment = pretty.getFragment();
+//		if (null != fragment && !fragment.isEmpty()) {
+//			if (fragment.startsWith(BANG)) {
+//				//move the content of the escaped fragment param
+//				//to the fragment. Exclude the initial "!"
+//				uriBuilder.addParameter(SEARCHBOT_ESCAPED_FRAGMENT_PARAM_NAME, fragment.substring(1));
+//				uriBuilder.setFragment(null);
+//			}
+//		}
+//		try {
+//			ugly = uriBuilder.build();
+//
+//		} catch (URISyntaxException ex) {
+//			throw new IllegalArgumentException(ex);
+//		}
+//		return ugly;
+//	}
 }
