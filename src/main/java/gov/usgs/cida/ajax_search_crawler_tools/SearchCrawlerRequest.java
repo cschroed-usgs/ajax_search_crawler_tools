@@ -68,20 +68,12 @@ public class SearchCrawlerRequest extends HttpServletRequestWrapper{
 	 * @return 
 	 */
 	static String getUrlWithoutContextPath(String fullUrl, String contextPath){
-		URI fullUri;
-		String urlWithoutContextPath = null;
-		try {
-			fullUri = new URI(fullUrl);
-			URIBuilder builder = new URIBuilder(fullUri);
-			builder.setHost(null)
-			.setScheme(null);
-			if(null != contextPath && !contextPath.isEmpty()){
-				builder.setPath(fullUri.getPath().replaceFirst(".*" + contextPath, ""));
-			}
-			urlWithoutContextPath = builder.build().toString();
-		} catch (URISyntaxException ex) {
-			throw new IllegalArgumentException(ex);
+		String urlWithoutContextPath = fullUrl;
+		
+		if(null != contextPath && !contextPath.isEmpty()){
+			urlWithoutContextPath = fullUrl.replaceFirst(".*/" + contextPath, "");
 		}
+
 		return urlWithoutContextPath;
 	}
 

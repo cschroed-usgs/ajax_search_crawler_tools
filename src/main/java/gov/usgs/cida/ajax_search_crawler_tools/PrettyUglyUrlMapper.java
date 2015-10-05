@@ -48,16 +48,16 @@ public class PrettyUglyUrlMapper {
 	 * 
 	 * We're using this instead of the apache http client to avoid transitive dependency version conflicts
 	 */
-	static Map<String, List<String>> splitQuery(URI uri) {
-		final Map<String, List<String>> query_pairs = new LinkedHashMap<String, List<String>>();
-		final String[] pairs = uri.getQuery().split("&");
+	static Map<String, List<String>> getQueryParams(URI uri) {
+		final Map<String, List<String>> query_pairs = new LinkedHashMap<>();
+		final String[] pairs = uri.getRawQuery().split("&");
 		for (String pair : pairs) {
 			try {
 				final int idx = pair.indexOf("=");
 				String key = idx > 0 ? URLDecoder.decode(pair.substring(0, idx), "UTF-8") : pair;
 				key = key.toLowerCase(Locale.ENGLISH);
 				if (!query_pairs.containsKey(key)) {
-					query_pairs.put(key, new LinkedList<String>());
+					query_pairs.put(key, new LinkedList<>());
 				}
 				final String value = idx > 0 && pair.length() > idx + 1 ? URLDecoder.decode(pair.substring(idx + 1), "UTF-8") : null;
 				query_pairs.get(key).add(value);
@@ -68,6 +68,13 @@ public class PrettyUglyUrlMapper {
 		return query_pairs;
 	}
 	
+	private static boolean endsInAmpersand (String queryString){
+		return null != queryString
+			&&
+			!queryString.isEmpty() 
+			&& 
+			'&' == (queryString.charAt(queryString.length()-1));
+	}
 	/**
 	 * Maps ugly urls to pretty urls as specified in the Google 
 	 * specification for Making AJAX Applications Crawlable:
@@ -76,36 +83,39 @@ public class PrettyUglyUrlMapper {
 	 * @return pretty url
 	 */
 	public static URI uglyToPretty(URI ugly){
-		Map<String, List<String>> kvps = splitQuery(ugly);
+		Map<String, List<String>> kvps = getQueryParams(ugly);
 		
 		//building new query string that excludes the _escaped_fragment_ key and values
 		//doing this instead of apache http client url builder to avoid transitive dependency conflicts
 		
-		String fragment = "";
+		String fragment = null;
 		URI pretty = null;
-		StringBuilder sb = new StringBuilder("?");
+		StringBuilder sb = new StringBuilder();
 		for (String key : kvps.keySet()) {
 			List<String> values = kvps.get(key);
 			//presumes that all keys are already lower-case
 			if (SEARCHBOT_ESCAPED_FRAGMENT_PARAM_NAME.equals(key)) {
 				String fragmentValue = values.get(0);
-				if (!fragmentValue.isEmpty()) {
+				if (null != fragmentValue && !fragmentValue.isEmpty()) {
 					fragment = BANG + fragmentValue;
 				}
 			} else {
 				for (String value : values) {
-					sb.append(key)
-						.append("=")
-						.append(value)
-						.append("&");
+					sb.append(key);
+					if (null != value && !value.isEmpty()) {
+						sb.append("=")
+							.append(value);
+					}
+					sb.append("&");
 				}
 			}
 		}
 		
 		String queryWithoutEscapedFragment = sb.toString();
+		queryWithoutEscapedFragment = queryWithoutEscapedFragment.isEmpty() ? null : queryWithoutEscapedFragment;
 		//remove the trailing ampersand, if any
-		if("&".equals(queryWithoutEscapedFragment.charAt(queryWithoutEscapedFragment.length()))){
-			queryWithoutEscapedFragment=queryWithoutEscapedFragment.substring(0, queryWithoutEscapedFragment.length());
+		if(endsInAmpersand(queryWithoutEscapedFragment)){
+			queryWithoutEscapedFragment=queryWithoutEscapedFragment.substring(0, queryWithoutEscapedFragment.length()-1);
 		}
 		try {
 			pretty = new URI(
@@ -151,6 +161,7 @@ public class PrettyUglyUrlMapper {
 //	 */
 //	public static URI prettyToUgly(URI pretty) {
 //		URI ugly = null;
+//		//doing this instead of apache http client url builder to avoid transitive dependency conflicts
 //		URIBuilder uriBuilder = new URIBuilder(pretty);
 //		String fragment = pretty.getFragment();
 //		if (null != fragment && !fragment.isEmpty()) {

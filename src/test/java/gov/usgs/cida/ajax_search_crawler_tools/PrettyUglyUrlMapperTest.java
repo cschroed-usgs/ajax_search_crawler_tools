@@ -61,7 +61,7 @@ public class PrettyUglyUrlMapperTest {
 //			//urls without fragments map to themselves
 //			assertEquals(urlWithoutFragment, result);
 		
-			result = PrettyUglyUrlMapper.uglyToPretty(pair.ugly);
+			String result = PrettyUglyUrlMapper.uglyToPretty(pair.ugly);
 			assertEquals(pair.pretty, result);
 		}
 	}
