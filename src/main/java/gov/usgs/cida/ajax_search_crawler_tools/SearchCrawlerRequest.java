@@ -1,7 +1,5 @@
 package gov.usgs.cida.ajax_search_crawler_tools;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
@@ -65,13 +63,16 @@ public class SearchCrawlerRequest extends HttpServletRequestWrapper{
 	 *	* the query string
 	 *	* fragment
 	 * @param request
-	 * @return 
+	 * @return the url of the path following the context path
 	 */
 	static String getUrlWithoutContextPath(String fullUrl, String contextPath){
 		String urlWithoutContextPath = fullUrl;
-		
+		String urlWithoutProtocol = fullUrl.replaceFirst("^.*://", "");
+		String urlWithoutProtocolPortOrHost = urlWithoutProtocol.replaceFirst(".*/", "/");
 		if(null != contextPath && !contextPath.isEmpty()){
-			urlWithoutContextPath = fullUrl.replaceFirst(".*/" + contextPath, "");
+			urlWithoutContextPath = urlWithoutProtocolPortOrHost.replaceFirst("^/" + contextPath, "/");
+		} else {
+			urlWithoutContextPath = urlWithoutProtocolPortOrHost;
 		}
 
 		return urlWithoutContextPath;
