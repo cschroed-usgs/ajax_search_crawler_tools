@@ -1,5 +1,6 @@
 package gov.usgs.cida.ajax_search_crawler_tools;
 
+import gov.usgs.cida.ajax_search_crawler_tools.servicer.ISearchCrawlerServicer;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
