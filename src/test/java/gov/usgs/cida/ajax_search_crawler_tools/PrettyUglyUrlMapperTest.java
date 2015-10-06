@@ -29,16 +29,6 @@ public class PrettyUglyUrlMapperTest {
 		}
 	}
 
-//	/**
-//	 * Test of prettyToUgly method, of class PrettyUglyUrlMapper.
-//	 */
-//	@Test
-//	public void testPrettyToUgly() throws URISyntaxException {
-//		for(PrettyUglyPair pair : prettyUglyPairs){
-//			String result = PrettyUglyUrlMapper.prettyToUgly(pair.pretty);
-//			assertEquals(pair.ugly, result);
-//		}
-//	}
 	
 	/**
 	 * Test a unidirectional mapping.
@@ -56,25 +46,9 @@ public class PrettyUglyUrlMapperTest {
 			
 		);
 		for(PrettyUglyPair pair : prettyUrlsWithoutFragments){
-			String urlWithoutFragment = pair.pretty;
-//			String result = PrettyUglyUrlMapper.prettyToUgly(urlWithoutFragment);
-//			//urls without fragments map to themselves
-//			assertEquals(urlWithoutFragment, result);
-		
 			String result = PrettyUglyUrlMapper.uglyToPretty(pair.ugly);
 			assertEquals(pair.pretty, result);
 		}
 	}
 	
-//	/**
-//	 * Test a corner case where the fragment is present, but it does not obey the 
-//	 * hashbang convention, i.e. it doesn't start with an "!". In that case,
-//	 * the url should be returned as-is.
-//	 */
-//	@Test
-//	public void testNonHashbangFragment(){
-//		String urlWithoutFragment = "http://cida.usgs.gov/#blah";
-//		String result = PrettyUglyUrlMapper.prettyToUgly("" + urlWithoutFragment);
-//		assertEquals(urlWithoutFragment, result);
-//	}
 }
