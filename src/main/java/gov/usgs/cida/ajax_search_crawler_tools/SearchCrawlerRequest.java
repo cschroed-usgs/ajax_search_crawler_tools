@@ -1,10 +1,7 @@
 package gov.usgs.cida.ajax_search_crawler_tools;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
-import org.apache.http.client.utils.URIBuilder;
 
 
 public class SearchCrawlerRequest extends HttpServletRequestWrapper{
@@ -66,23 +63,18 @@ public class SearchCrawlerRequest extends HttpServletRequestWrapper{
 	 *	* the query string
 	 *	* fragment
 	 * @param request
-	 * @return 
+	 * @return the url of the path following the context path
 	 */
 	static String getUrlWithoutContextPath(String fullUrl, String contextPath){
-		URI fullUri;
-		String urlWithoutContextPath = null;
-		try {
-			fullUri = new URI(fullUrl);
-			URIBuilder builder = new URIBuilder(fullUri);
-			builder.setHost(null)
-			.setScheme(null);
-			if(null != contextPath && !contextPath.isEmpty()){
-				builder.setPath(fullUri.getPath().replaceFirst(".*" + contextPath, ""));
-			}
-			urlWithoutContextPath = builder.build().toString();
-		} catch (URISyntaxException ex) {
-			throw new IllegalArgumentException(ex);
+		String urlWithoutContextPath = fullUrl;
+		String urlWithoutProtocol = fullUrl.replaceFirst("^.*://", "");
+		String urlWithoutProtocolPortOrHost = urlWithoutProtocol.replaceFirst(".*?/", "/");
+		if(null != contextPath && !contextPath.isEmpty()){
+			urlWithoutContextPath = urlWithoutProtocolPortOrHost.replaceFirst("^" + contextPath, "");
+		} else {
+			urlWithoutContextPath = urlWithoutProtocolPortOrHost;
 		}
+
 		return urlWithoutContextPath;
 	}
 

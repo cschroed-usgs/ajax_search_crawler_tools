@@ -24,5 +24,13 @@ public class SearchEngineCrawlerRequestTest {
 		String expected = "/";
 		assertEquals(expected, result);
 	}
-	
+	@Test
+	public void testUrlWithManyPathComponents(){
+		String fullUrl = "http://localhost:8080/gdp_web/client/?some_param=some_value";
+		String contextPath = "/gdp_web";
+		String result = SearchCrawlerRequest.getUrlWithoutContextPath(fullUrl, contextPath);
+		String expected = "/client/?some_param=some_value";
+		assertEquals(expected, result);
+		
+	}
 }
