@@ -29,9 +29,8 @@ public class SHA1SkeletonResourceServicer implements ISearchCrawlerServicer {
 	/**
 	 * Given a request from a searchbot, serve up a cached page that is
 	 * easily interpreted by the searchbot
-	 * @param request
-	 * @param response
-	 * @throws IOException 
+	 * @param request from the search crawler
+	 * @param response to the search crawler
 	 */
 	
 	@Override
@@ -53,6 +52,14 @@ public class SHA1SkeletonResourceServicer implements ISearchCrawlerServicer {
 		}
 	}
 	
+	/**
+	 * Gets the name of the resource on the classpath based on the provided
+	 * url.
+	 * @param prettyUrlWithoutContextPath the url that the search bot wishes
+	 * it could see if it could process javascript. Should not contain the
+	 * protocol, host, port or context path
+	 * @return the name of the resource
+	 */
 	public String getResourceName(String prettyUrlWithoutContextPath) {
 		String resourceName = null;
 		try {
